@@ -14,7 +14,7 @@ WORKDIR /var/www/html
 # 4️⃣ Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# 5️⃣ Crear configuración personalizada de Nginx con reescrituras
+# 5️⃣ Crear configuración personalizada de Nginx con socket Unix
 RUN mkdir -p /etc/nginx/sites-enabled && \
     echo 'server { \
         listen 8080; \
@@ -26,7 +26,7 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
             try_files $uri $uri/ /index.php?$query_string; \
         } \
         location ~ \.php$ { \
-            fastcgi_pass localhost:9000; \
+            fastcgi_pass unix:/var/run/php-fpm.sock; \
             fastcgi_index index.php; \
             fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
             include fastcgi_params; \
