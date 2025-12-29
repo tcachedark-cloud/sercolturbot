@@ -1,0 +1,43 @@
+# Logs
+logs/
+*.log
+public/api_log.txt
+public/notificaciones_log.txt
+public/whatsapp_log.txt
+last_webhook.json
+
+# Session files
+public/sessions/
+*.json
+!setup/insert_sample_data.json
+
+# Local development
+.env.local
+.DS_Store
+.vscode/
+.idea/
+
+# Vendor dependencies
+vendor/
+node_modules/
+
+# Sensitive data
+*.key
+*.pem
+config/database.php
+config/whatsapp_config.php
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# Windows
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Build files
+dist/
+build/
