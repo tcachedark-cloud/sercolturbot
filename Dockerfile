@@ -22,7 +22,7 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
         root /var/www/html; \
         index index.php; \
         location ~ \.php$ { \
-            fastcgi_pass 127.0.0.1:9000; \
+            fastcgi_pass localhost:9000; \
             fastcgi_index index.php; \
             fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
             include fastcgi_params; \
@@ -34,7 +34,7 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
 
 # 6️⃣ Crear configuración de supervisor
 RUN mkdir -p /etc/supervisor/conf.d && \
-    echo '[supervisord]\nnodaemon=true\n\n[program:php-fpm]\ncommand=php-fpm\nautorestart=true\n\n[program:nginx]\ncommand=nginx -g "daemon off;"\nautorestart=true' > /etc/supervisor/conf.d/services.conf
+    echo '[supervisord]\nuser=root\nnodaemon=true\n\n[program:php-fpm]\ncommand=php-fpm\nautorestart=true\n\n[program:nginx]\ncommand=nginx -g "daemon off;"\nautorestart=true' > /etc/supervisor/conf.d/services.conf
 
 EXPOSE 8080
 
