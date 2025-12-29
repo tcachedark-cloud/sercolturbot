@@ -14,33 +14,43 @@ WORKDIR /var/www/html
 # 4️⃣ Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# 5️⃣ Crear configuración personalizada de Nginx con socket Unix
-RUN mkdir -p /etc/nginx/sites-enabled && \
-    echo 'server { \
-        listen 8080; \
-        server_name _; \
-        root /var/www/html; \
-        index index.php index.html; \
-        client_max_body_size 100M; \
-        location / { \
-            try_files $uri $uri/ /index.php?$query_string; \
-        } \
-        location ~ \.php$ { \
-            fastcgi_pass unix:/var/run/php-fpm.sock; \
-            fastcgi_index index.php; \
-            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-            include fastcgi_params; \
-        } \
-        location ~ /\. { \
-            deny all; \
-        } \
-    }' > /etc/nginx/sites-enabled/default
+# 5️⃣ Configurar PHP-FPM para usar socket Unix
+RUN sed -i 's|listen = 9000|listen = /var/run/php-fpm.sock|g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.owner = nobody|listen.owner = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.group = nobody|listen.group = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.mode = 0660|listen.mode = 0660|g' /usr/local/etc/php-fpm.d/www.conf
 
-# 6️⃣ Crear configuración de supervisor
+# 6️⃣ Crear configuración de Nginx (sintaxis correcta)
+RUN mkdir -p /etc/nginx/sites-enabled && cat > /etc/nginx/sites-enabled/default << 'EOF'
+server {
+    listen 8080;
+    server_name _;
+    root /var/www/html;
+    index index.php index.html;
+    client_max_body_size 100M;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+}
+EOF
+
+# 7️⃣ Crear configuración de supervisor
 RUN mkdir -p /etc/supervisor/conf.d && \
     echo '[supervisord]\nuser=root\nnodaemon=true\n\n[program:php-fpm]\ncommand=php-fpm\nautorestart=true\n\n[program:nginx]\ncommand=nginx -g "daemon off;"\nautorestart=true' > /etc/supervisor/conf.d/services.conf
 
 EXPOSE 8080
 
-# 7️⃣ Ejecutar supervisor
+# 8️⃣ Ejecutar supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
