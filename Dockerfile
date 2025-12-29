@@ -1,11 +1,17 @@
 FROM php:8.2-apache
 
+# Desactivar MPMs que causan conflicto
+RUN a2dismod mpm_event mpm_worker || true
+RUN a2enmod mpm_prefork
+
+# Extensiones PHP
 RUN docker-php-ext-install pdo pdo_mysql mysqli
-RUN a2enmod rewrite
 
+# Copiar proyecto
 COPY . /var/www/html/
-WORKDIR /var/www/html
 
+# Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-EXPOSE 80
+# Puerto Railway
+EXPOSE 8080
