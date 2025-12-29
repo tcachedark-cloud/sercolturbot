@@ -14,13 +14,11 @@ WORKDIR /var/www/html
 # 4️⃣ Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# 5️⃣ Configurar PHP-FPM para usar socket Unix
-RUN sed -i 's|listen = 9000|listen = /var/run/php-fpm.sock|g' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.owner = nobody|listen.owner = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.group = nobody|listen.group = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.mode = 0660|listen.mode = 0660|g' /usr/local/etc/php-fpm.d/www.conf
+# 5️⃣ Mantener PHP-FPM en puerto 9000 (TCP)
+RUN sed -i 's|;listen.owner = nobody|listen.owner = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.group = nobody|listen.group = www-data|g' /usr/local/etc/php-fpm.d/www.conf
 
-# 6️⃣ Crear configuración de Nginx (sintaxis correcta)
+# 6️⃣ Configuración de Nginx
 RUN mkdir -p /etc/nginx/sites-enabled && cat > /etc/nginx/sites-enabled/default << 'EOF'
 server {
     listen 8080;
@@ -34,7 +32,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php-fpm.sock;
+        fastcgi_pass 127.0.0.1:9000;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
@@ -46,27 +44,21 @@ server {
 }
 EOF
 
-# 7️⃣ Crear configuración de supervisor (PHP-FPM PRIMERO)
+# 7️⃣ Configuración de supervisor
 RUN mkdir -p /etc/supervisor/conf.d && cat > /etc/supervisor/conf.d/services.conf << 'EOF'
 [supervisord]
 user=root
 nodaemon=true
 
 [program:php-fpm]
-command=php-fpm -F
+command=/usr/local/sbin/php-fpm
 autostart=true
 autorestart=true
-priority=999
-startsecs=0
-stopasgroup=true
 
 [program:nginx]
 command=nginx -g "daemon off;"
 autostart=true
 autorestart=true
-priority=1000
-startsecs=5
-stopasgroup=true
 EOF
 
 EXPOSE 8080
