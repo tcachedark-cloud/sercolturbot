@@ -1,67 +1,14 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
-# 1️⃣ Instalar Nginx y supervisor
-RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
-
-# 2️⃣ Extensiones PHP
+# Instalar extensiones
 RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# 3️⃣ Copiar proyecto
-COPY . /var/www/html
+# Copiar proyecto
+COPY . /app
+WORKDIR /app
 
-WORKDIR /var/www/html
-
-# 4️⃣ Permisos
-RUN chown -R www-data:www-data /var/www/html
-
-# 5️⃣ Mantener PHP-FPM en puerto 9000 (TCP)
-RUN sed -i 's|;listen.owner = nobody|listen.owner = www-data|g' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.group = nobody|listen.group = www-data|g' /usr/local/etc/php-fpm.d/www.conf
-
-# 6️⃣ Configuración de Nginx
-RUN mkdir -p /etc/nginx/sites-enabled && cat > /etc/nginx/sites-enabled/default << 'EOF'
-server {
-    listen 8080;
-    server_name _;
-    root /var/www/html;
-    index index.php index.html;
-    client_max_body_size 100M;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\. {
-        deny all;
-    }
-}
-EOF
-
-# 7️⃣ Configuración de supervisor
-RUN mkdir -p /etc/supervisor/conf.d && cat > /etc/supervisor/conf.d/services.conf << 'EOF'
-[supervisord]
-user=root
-nodaemon=true
-
-[program:php-fpm]
-command=/usr/local/sbin/php-fpm
-autostart=true
-autorestart=true
-
-[program:nginx]
-command=nginx -g "daemon off;"
-autostart=true
-autorestart=true
-EOF
-
+# Exponer puerto
 EXPOSE 8080
 
-    # 8️⃣ Ejecutar supervisor
-    CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+# Usar servidor PHP integrado (más simple y confiable)
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app"]
