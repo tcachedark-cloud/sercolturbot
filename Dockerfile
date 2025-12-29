@@ -32,7 +32,10 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
         } \
     }' > /etc/nginx/sites-enabled/default
 
+# 6️⃣ Crear script de inicio
+RUN echo '#!/bin/bash\nphp-fpm\nnginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+
 EXPOSE 8080
 
-# 6️⃣ Iniciar PHP-FPM y Nginx
-CMD php-fpm -D && nginx -g 'daemon off;'
+# 7️⃣ Ejecutar script
+CMD ["/start.sh"]
