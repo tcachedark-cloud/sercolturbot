@@ -63,5 +63,5 @@ EOF
 
 EXPOSE 8080
 
-# 8️⃣ Ejecutar supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+    # 8️⃣ Ejecutar supervisor
+    CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

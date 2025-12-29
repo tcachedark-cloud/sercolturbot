@@ -59,4 +59,8 @@ echo "</div>";
 
 echo "<p style='margin-top:30px;color:#555;font-size:12px'>SERCOLTURBOT v1.0 - Railway Production</p>";
 echo "</div></body></html>";
+<<<<<<< HEAD
 ?>
+=======
+?>
+>>>>>>> 25831a06b69c4724998e36dfcd8f452d7af1ba31

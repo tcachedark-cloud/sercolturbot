@@ -1,9 +1,6 @@
 <?php
-/**
- * API DASHBOARD SERCOLTURBOT - VERSIÓN EMPRESARIAL
- * Con soporte para FAQs
- * Sincronizado con WhatsApp Bot
- */
+require_once __DIR__ . '/database.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
@@ -21,13 +18,15 @@ function logAPI($msg) {
     file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] $msg\n", FILE_APPEND); 
 }
 
-try {
-    $pdo = new PDO("mysql:host=localhost;dbname=sercolturbot;charset=utf8mb4", "root", "C121672@c",
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'error' => 'Error BD: ' . $e->getMessage()]);
+$pdo = getDatabase();
+if (!$pdo) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error conexión BD'
+    ]);
     exit;
 }
+
 
 // CONFIGURACIÓN WHATSAPP
 $WHATSAPP_TOKEN = 'EAA9SPy8AxVcBQUdrqpYlWZAVGlItEwWvePNshGPh1Gkj4vETo0YjaRuR7ruZBRHjcltKyfyUpykZAOYRLMCxuqF2aZCf9Ac9dWAH4uXb0qpVGxtcYvTyMe1KUOtRNSsEGZAa0njybcZA71ZBIuD9W4j05nraBMUrWiXz5ZCpOHUlulpAoMZAR8HDhwE08OLad41mKVyumb8Jp7kGuTNEcvOJifcOiPNgeMZBXSOJK4sfIKES9H7h3tv86X27UuU6klSLf9CGsizwZCejZAiFccaRTtDZAn3MTqxvPrlKsIwZDZD';

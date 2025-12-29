@@ -7,15 +7,14 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+
 $VERIFY_TOKEN = 'SERCOLTUR2025';
 $ACCESS_TOKEN = 'EAA9SPy8AxVcBQTrAzAKrjSCv3vfmlycXhXkbmwjvHunpHiCTi2dkHm2uwYQiIUZBmdhX0kaNnUD4NURHOdesvXdaVqpZACKoXDvzPbQZC4aI9rsRlrRmRIa98Yru3FuZChjxDSNSB5f3r2MP3qorVvSH4HaRYRbVsWMnB5l4BWCaZCUZBp878cKKFpa5QSGMngRpoqqcmQ0MOtzxgXEKZAgyJeIpRSUDSU3AWOrwDjwx3clmWJ2La5PwHd0aAZALBsqem4W1nsP87PZCuzGzZADaGt3sQlBGxggZAfj4CMz';
 $PHONE_ID = '925480580639940';
 $SESSIONS_DIR = __DIR__ . '/sessions';
 if (!is_dir($SESSIONS_DIR)) mkdir($SESSIONS_DIR, 0755, true);
 
-// ═══════════════════════════════════════════════════════════════
-// CONFIGURACIÓN HORARIOS DE ATENCIÓN
-// ═══════════════════════════════════════════════════════════════
+
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -45,11 +44,19 @@ function getDatabase() {
     static $pdo = null;
     if ($pdo === null) {
         try {
-            $pdo = new PDO("mysql:host=localhost;dbname=sercolturbot;charset=utf8mb4", "root", "C121672@c", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
-        } catch (PDOException $e) { return null; }
+            $pdo = new PDO(
+                "mysql:host=localhost;dbname=sercolturbot;charset=utf8mb4",
+                "root",
+                "C121672@c",
+                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+            );
+        } catch (PDOException $e) { 
+            return null; 
+        }
     }
     return $pdo;
 }
+
 
 function logBot($msg) { file_put_contents(__DIR__ . '/whatsapp_log.txt', "[" . date('Y-m-d H:i:s') . "] $msg\n", FILE_APPEND); }
 

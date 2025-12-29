@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  php-nginx:
+    build: .
+    container_name: sercolturbot
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=sercolturbot
+    depends_on:
+      - mysql
+    volumes:
+      - .:/var/www/html
+    networks:
+      - sercolturbot-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: sercolturbot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sercolturbot
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - sercolturbot-network
+
+volumes:
+  mysql-data:
+
+networks:
+  sercolturbot-network:
+    driver: bridge
