@@ -1,20 +1,29 @@
 FROM php:8.2-apache
 
-# 🔥 Desactivar MPMs conflictivos (NO prefork)
-RUN a2dismod mpm_event mpm_worker || true
+# 1️⃣ Desactivar TODOS los MPM explícitamente (a nivel de archivos)
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+          /etc/apache2/mods-enabled/mpm_worker.load \
+          /etc/apache2/mods-enabled/mpm_prefork.load
 
-# PHP extensions
+# 2️⃣ Activar SOLO prefork (el único compatible con PHP)
+RUN a2enmod mpm_prefork
+
+# 3️⃣ Extensiones PHP
 RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# Apache
+# 4️⃣ Apache config básica
 RUN a2enmod rewrite
 
-# Copiar SOLO el código público
-COPY public/ /var/www/html/
+# 5️⃣ Copiar proyecto
+COPY . /var/www/html
 
-# Permisos
+WORKDIR /var/www/html
+
+# 6️⃣ Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# Puerto Railway
+# 7️⃣ Puerto Railway
 EXPOSE 8080
+
+# 8️⃣ Apache escucha en 8080
 RUN sed -i 's/80/8080/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
