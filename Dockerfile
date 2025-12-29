@@ -46,9 +46,28 @@ server {
 }
 EOF
 
-# 7️⃣ Crear configuración de supervisor
-RUN mkdir -p /etc/supervisor/conf.d && \
-    echo '[supervisord]\nuser=root\nnodaemon=true\n\n[program:php-fpm]\ncommand=php-fpm\nautorestart=true\n\n[program:nginx]\ncommand=nginx -g "daemon off;"\nautorestart=true' > /etc/supervisor/conf.d/services.conf
+# 7️⃣ Crear configuración de supervisor (PHP-FPM PRIMERO)
+RUN mkdir -p /etc/supervisor/conf.d && cat > /etc/supervisor/conf.d/services.conf << 'EOF'
+[supervisord]
+user=root
+nodaemon=true
+
+[program:php-fpm]
+command=php-fpm -F
+autostart=true
+autorestart=true
+priority=999
+startsecs=0
+stopasgroup=true
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+priority=1000
+startsecs=5
+stopasgroup=true
+EOF
 
 EXPOSE 8080
 
