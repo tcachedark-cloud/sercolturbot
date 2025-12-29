@@ -14,9 +14,23 @@ WORKDIR /var/www/html
 # 4️⃣ Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# 5️⃣ Configurar Nginx para puerto 8080
-RUN sed -i 's/listen 80/listen 8080/' /etc/nginx/sites-available/default && \
-    sed -i 's/fastcgi_pass unix/fastcgi_pass 127.0.0.1:9000/' /etc/nginx/sites-available/default
+# 5️⃣ Crear configuración personalizada de Nginx
+RUN mkdir -p /etc/nginx/sites-enabled && \
+    echo 'server { \
+        listen 8080; \
+        server_name _; \
+        root /var/www/html; \
+        index index.php; \
+        location ~ \.php$ { \
+            fastcgi_pass 127.0.0.1:9000; \
+            fastcgi_index index.php; \
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
+            include fastcgi_params; \
+        } \
+        location / { \
+            try_files $uri $uri/ /index.php?$query_string; \
+        } \
+    }' > /etc/nginx/sites-enabled/default
 
 EXPOSE 8080
 
