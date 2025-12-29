@@ -14,7 +14,6 @@ echo "<p>Sistema de Reservas de Tours - Medellín</p>";
 echo "<div class='status'>";
 echo "<p class='ok'>✅ PHP funcionando correctamente</p>";
 
-// Verificar variables MySQL de Railway
 $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: 'no configurado';
 $db = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'no configurado';
 $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'no configurado';
@@ -25,7 +24,6 @@ echo "<p>📊 MySQL Host: " . htmlspecialchars($host) . "</p>";
 echo "<p>📊 MySQL Database: " . htmlspecialchars($db) . "</p>";
 echo "<p>📊 MySQL Port: " . htmlspecialchars($port) . "</p>";
 
-// Intentar conexión
 if ($host !== 'no configurado' && $db !== 'no configurado') {
     try {
         $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
@@ -59,8 +57,3 @@ echo "</div>";
 
 echo "<p style='margin-top:30px;color:#555;font-size:12px'>SERCOLTURBOT v1.0 - Railway Production</p>";
 echo "</div></body></html>";
-<<<<<<< HEAD
-?>
-=======
-?>
->>>>>>> 25831a06b69c4724998e36dfcd8f452d7af1ba31
