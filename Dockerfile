@@ -1,7 +1,7 @@
 FROM php:8.2-fpm
 
-# 1️⃣ Instalar Nginx
-RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
+# 1️⃣ Instalar Nginx y supervisor
+RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
 
 # 2️⃣ Extensiones PHP
 RUN docker-php-ext-install pdo pdo_mysql mysqli
@@ -32,7 +32,11 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
         } \
     }' > /etc/nginx/sites-enabled/default
 
+# 6️⃣ Crear configuración de supervisor
+RUN mkdir -p /etc/supervisor/conf.d && \
+    echo '[supervisord]\nnodaemon=true\n\n[program:php-fpm]\ncommand=php-fpm\nautorestart=true\n\n[program:nginx]\ncommand=nginx -g "daemon off;"\nautorestart=true' > /etc/supervisor/conf.d/services.conf
+
 EXPOSE 8080
 
-# Ejecutar ambos servicios sin script
-CMD php-fpm & nginx -g 'daemon off;'
+# 7️⃣ Ejecutar supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
