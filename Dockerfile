@@ -1,11 +1,9 @@
 FROM php:8.2-apache
 
-# 1️⃣ Desactivar TODOS los MPM explícitamente (a nivel de archivos)
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
-          /etc/apache2/mods-enabled/mpm_worker.load \
-          /etc/apache2/mods-enabled/mpm_prefork.load
+# 1️⃣ Eliminar TODOS los archivos de MPM (más efectivo que a2dismod)
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf
 
-# 2️⃣ Activar SOLO prefork (el único compatible con PHP)
+# 2️⃣ Activar SOLO prefork
 RUN a2enmod mpm_prefork
 
 # 3️⃣ Extensiones PHP
