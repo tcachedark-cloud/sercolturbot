@@ -1,9 +1,0 @@
-.git
-.gitignore
-.env.example
-.DS_Store
-node_modules
-*.log
-.htaccess
-docker-compose.yml
-README.md
