@@ -1,10 +1,24 @@
 <?php
-/**
- * DASHBOARD SERCOLTURBOT - VERSIÓN EMPRESARIAL
- * Compatible con Render + Railway
- */
+
+if (isset($_GET['dbtest'])) {
+    require_once __DIR__ . '/setup/init-database.php';
+
+    header('Content-Type: text/plain');
+
+    $pdo = getDatabase();
+    if ($pdo) {
+        echo "✅ CONECTADO A MYSQL\n";
+        echo "Base de datos: " . $pdo->query("SELECT DATABASE()")->fetchColumn();
+    } else {
+        echo "❌ NO CONECTA\n";
+        echo "DATABASE_URL = ";
+        var_dump(getenv('DATABASE_URL'));
+    }
+    exit;
+}
 
 session_start();
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
