@@ -13,7 +13,7 @@ $pdo = getDatabase();
 
 if ($pdo) {
     echo "\n✅ CONECTADO A MYSQL\n";
-    echo "Base de datos: " . $pdo->query("SELECT DATABASE()")->fetchColumn() . "\n";
+    echo "DB: " . $pdo->query("SELECT DATABASE()")->fetchColumn();
 } else {
     echo "\n❌ NO CONECTA A MYSQL\n";
 }
