@@ -17,7 +17,7 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once(__DIR__ . '/../config/database.php');
+   
     
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
