@@ -1,93 +1,33 @@
+
 <?php
-/**
- * Cargar .env si existe (desarrollo local)
- */
-$envFile = __DIR__ . '/../../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        if (strpos($line, '=') === false) continue;
-        
-        [$key, $value] = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-        // Remover comillas si las hay
-        $value = preg_replace('/^["\']|["\']$/', '', $value);
-        putenv("$key=$value");
-    }
-}
+// Lee exactamente los nombres que ya tienes en Render.
+// Ojo: si el nombre tiene espacios o guiones bajos finales, colócalo tal cual.
+$dbName   = getenv('BASE DE DATOS MYSQL') ?: getenv('BASE DE DATOS MYSQL_');
+$dbUser   = getenv('USUARIO MYSQL');
+$dbPass   = getenv('CONTRASEÑA MYSQL');
+$dbHost   = getenv('HOST MYSQL');
+$dbPort   = getenv('MYSQLPORT');
 
-/**
- * Conector robusto para Render ⇄ Railway
- * - Lee primero DB_* (tu esquema actual)
- * - Si faltan, intenta DB_DATABASE/DB_USERNAME/DB_PASSWORD (esquema estándar)
- * - Si aún faltan, parsea DATABASE_URL (mysql://user:pass@host:port/db)
- */
-
-function dbConfigFromEnv(): array {
-    // Intento 1: tu esquema actual
-    $host = getenv('DB_HOST');
-    $port = getenv('DB_PORT');
-    $db   = getenv('DB_NAME');
-    $user = getenv('DB_USER');
-    $pass = getenv('DB_PASS');
-
-    // Intento 2: esquema estándar
-    if (!$db || !$user || !$pass) {
-        $db   = $db   ?: getenv('DB_DATABASE');
-        $user = $user ?: getenv('DB_USERNAME');
-        $pass = $pass ?: getenv('DB_PASSWORD');
-    }
-
-    // Intento 3: parsear DATABASE_URL
-    $url = getenv('DATABASE_URL') ?: getenv('RAILWAY_DATABASE_URL');
-    if ((!$host || !$port || !$db || !$user || !$pass) && $url) {
-        $parts = parse_url($url);
-        if ($parts !== false) {
-            $host = $host ?: ($parts['host'] ?? null);
-            $port = $port ?: ($parts['port'] ?? 3306);
-            if (!$db && isset($parts['path'])) {
-                $db = ltrim($parts['path'], '/');
-            }
-            $user = $user ?: ($parts['user'] ?? null);
-            $pass = $pass ?: ($parts['pass'] ?? null);
-        }
-    }
-
-    // Defaults de seguridad
-    $host = $host ?: 'localhost';
-    $port = $port ?: 3306;
-
-    return compact('host', 'port', 'db', 'user', 'pass');
-}
-
-$config = dbConfigFromEnv();
-
-// Diagnóstico mínimo en logs (temporal)
-error_log('DB_HOST=' . ($config['host'] ?? '(vacío)'));
-error_log('DB_NAME=' . ($config['db']   ?? '(vacío)'));
-error_log('DB_USER=' . ($config['user'] ?? '(vacío)'));
-error_log('DB_PORT=' . ($config['port'] ?? '(vacío)'));
+// Construye el DSN usando host/puerto del proxy público de Railway.
+$dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=utf8mb4";
 
 try {
-    if (!$config['host'] || !$config['db'] || !$config['user']) {
-        throw new RuntimeException('Variables MySQL no configuradas (host/db/user faltan).');
-    }
-
-    $dsn = sprintf(
-        'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
-        $config['host'],
-        $config['port'],
-        $config['db']
-    );
-
-    $pdo = new PDO($dsn, $config['user'], $config['pass'], [
+    $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
-} catch (Throwable $e) {
+        // En Render puede ser útil activar SSL si tu proxy lo requiere:
+        // PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+    ];
+    $pdo = new PDO($dsn, $dbUser, $dbPass, $options);
+
+    // Prueba rápida:
+    $stmt = $pdo->query('SELECT 1 as ok');
+    $row  = $stmt->fetch();
+    echo "Conexión OK: " . $row['ok'] . PHP_EOL;
+
+} catch (PDOException $e) {
+    // Log claro para depuración en Render
+    error_log("Error de conexión MySQL: " . $e->getMessage());
     http_response_code(500);
-    die('❌ Error de conexión MySQL: ' . $e->getMessage());
+    echo "No se pudo conectar a MySQL. Revisa HOST/PORT/USER/PASS/DB.";
 }
