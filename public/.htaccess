@@ -1,8 +1,11 @@
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  Options -Indexes
+    RewriteEngine On
+    RewriteBase /
 
-  # Enviar TODO a /public
-  RewriteCond %{REQUEST_URI} !^/public/
-  RewriteRule ^(.*)$ /public/$1 [L]
+    # No reescribir archivos y directorios reales
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Reescribir solicitudes a index.php
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 </IfModule>
