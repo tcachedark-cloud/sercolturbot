@@ -2,7 +2,7 @@
 
 ## Exportar Base de Datos Local
 
-1. Accede a: `http://localhost/SERCOLTURBOT/scripts/export-database.php`
+1. Accede a: `http://localhost/SERCOLTURBOT/public/scripts/export-database.php`
 2. Se descargará un archivo `backup_YYYY-MM-DD_HH-MM-SS.sql`
 
 ## Importar en Railway
@@ -19,7 +19,7 @@ railway db push < backup_YYYY-MM-DD_HH-MM-SS.sql
 
 ### Opción 3: Usar script PHP (si tienes acceso)
 1. Sube el archivo `backup_YYYY-MM-DD_HH-MM-SS.sql`
-2. Accede a: `https://tu-app.onrender.com/scripts/import-database.php`
+2. Accede a: `https://sercolturbot-kwhr.onrender.com/scripts/import-database.php`
 3. Selecciona el archivo y envía (POST)
 
 ## Variables de Entorno Requeridas
@@ -32,3 +32,15 @@ Configura en Railway:
 - `DB_PASSWORD` - Contraseña
 
 O simplemente: `DATABASE_URL` (formato: `mysql://user:pass@host:port/db`)
+
+## Estructura de Archivos
+
+```
+public/
+├── config/
+│   └── database.php (conexión a BD)
+├── scripts/
+│   ├── export-database.php (descargar SQL)
+│   └── import-database.php (cargar SQL)
+└── ...
+```

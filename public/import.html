@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Base de Datos</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        form { background: #f5f5f5; padding: 20px; border-radius: 8px; }
+        input, button { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; cursor: pointer; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>📥 Importar Base de Datos</h1>
+    <form method="POST" enctype="multipart/form-data" action="scripts/import-database.php">
+        <label>Selecciona archivo SQL:</label>
+        <input type="file" name="sql_file" accept=".sql" required>
+        <button type="submit">Importar</button>
+    </form>
+</body>
+</html>
