@@ -1,11 +1,9 @@
 <?php
-/**
- * LOGIN SERCOLTUR - Sistema de Autenticación
- * Diseño moderno y tecnológico
- */
+
 
 session_start();
-
+require_once __DIR__ . '/config/database.php';
+    
 // Si ya está logueado, redirigir al dashboard
 if (isset($_SESSION['user_id'])) {
     header('Location: dashboard.php');

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/config/database.php';
+
+
 
 if (isset($_GET['dbtest'])) {
     require_once __DIR__ . '/setup/init-database.php';
