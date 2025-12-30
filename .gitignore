@@ -1,5 +1,7 @@
 # Archivos de depuración
-public/debug-env.php
+debug-env.php
+env-check.php
+status.php
 
 # Variables de entorno
 .env

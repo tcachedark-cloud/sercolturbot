@@ -1,37 +1,76 @@
+
 <?php
+/**
+ * Conector robusto para Render ⇄ Railway
+ * - Lee primero DB_* (tu esquema actual)
+ * - Si faltan, intenta DB_DATABASE/DB_USERNAME/DB_PASSWORD (esquema estándar)
+ * - Si aún faltan, parsea DATABASE_URL (mysql://user:pass@host:port/db)
+ */
 
-// Soporta múltiples formatos de variables de entorno
-// Railway usa DATABASE_URL, otras plataformas usan variables individuales
-$host = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: getenv('RAILWAY_DB_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: getenv('MYSQL_PORT') ?: getenv('RAILWAY_DB_PORT') ?: 3306;
-$db   = getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: getenv('RAILWAY_DB_NAME') ?: 'railway';
-$user = getenv('DB_USERNAME') ?: getenv('DB_USER') ?: getenv('RAILWAY_DB_USER') ?: 'root';
-$pass = getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: getenv('RAILWAY_DB_PASSWORD') ?: '';
+function dbConfigFromEnv(): array {
+    // Intento 1: tu esquema actual
+    $host = getenv('DB_HOST');
+    $port = getenv('DB_PORT');
+    $db   = getenv('DB_NAME');
+    $user = getenv('DB_USER');
+    $pass = getenv('DB_PASS');
 
-// Si DATABASE_URL está disponible (formato Railway), parsear URL
-$databaseUrl = getenv('DATABASE_URL');
-if ($databaseUrl) {
-    $parsed = parse_url($databaseUrl);
-    $host = $parsed['host'] ?? $host;
-    $port = $parsed['port'] ?? $port;
-    $user = $parsed['user'] ?? $user;
-    $pass = $parsed['pass'] ?? $pass;
-    $db = ltrim($parsed['path'] ?? '', '/') ?: $db;
+    // Intento 2: esquema estándar
+    if (!$db || !$user || !$pass) {
+        $db   = $db   ?: getenv('DB_DATABASE');
+        $user = $user ?: getenv('DB_USERNAME');
+        $pass = $pass ?: getenv('DB_PASSWORD');
+    }
+
+    // Intento 3: parsear DATABASE_URL (si existe)
+    $url = getenv('DATABASE_URL') ?: getenv('RAILWAY_DATABASE_URL');
+    if ((!$host || !$port || !$db || !$user || !$pass) && $url) {
+        $parts = parse_url($url);
+        if ($parts !== false) {
+            $host = $host ?: ($parts['host'] ?? null);
+            $port = $port ?: ($parts['port'] ?? 3306);
+            // path viene con '/dbname'
+            if (!$db && isset($parts['path'])) {
+                $db = ltrim($parts['path'], '/');
+            }
+            $user = $user ?: ($parts['user'] ?? null);
+            $pass = $pass ?: ($parts['pass'] ?? null);
+        }
+    }
+
+    // Defaults seguros (para mostrar estado, no para producción)
+    $host = $host ?: 'localhost';
+    $port = $port ?: 3306;
+
+    return compact('host', 'port', 'db', 'user', 'pass');
 }
 
+$config = dbConfigFromEnv();
+
 try {
-    $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $db);
-    $pdo = new PDO(
-        $dsn,
-        $user,
-        $pass,
-        [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]
+    if (!$config['host'] || !$config['db'] || !$config['user']) {
+        // Mensaje claro si faltan variables (evitar exponer el password)
+        throw new RuntimeException('Variables MySQL no configuradas (host/db/user faltan).');
+    }
+
+    $dsn = sprintf(
+        'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+        $config['host'],
+        $config['port'],
+        $config['db']
     );
-} catch (PDOException $e) {
+
+    $pdo = new PDO($dsn, $config['user'], $config['pass'], [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+
+    // Opcional: prueba rápida
+    // $pdo->query('SELECT 1');
+
+} catch (Throwable $e) {
     http_response_code(500);
-    die("❌ Error DB: " . $e->getMessage());
+    // No exponer credenciales
+    die('❌ Error de conexión MySQL: ' . $e->getMessage());
 }
