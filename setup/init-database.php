@@ -1,38 +1,47 @@
 <?php
 /**
- * Conexión única a MySQL
- * Compatible con Render + Railway
+ * Conexión MySQL REAL para Render + Railway
+ * Usa DATABASE_URL (método correcto)
  */
 
 function getDatabase() {
     static $pdo = null;
+    if ($pdo !== null) return $pdo;
 
-    if ($pdo === null) {
-        try {
-            $host = getenv('DB_HOST') ?: getenv('MYSQLHOST');
-            $port = getenv('DB_PORT') ?: getenv('MYSQLPORT') ?: 3306;
-            $db   = getenv('DB_DATABASE') ?: getenv('MYSQLDATABASE');
-            $user = getenv('DB_USERNAME') ?: getenv('MYSQLUSER');
-            $pass = getenv('DB_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD');
+    try {
+        $databaseUrl = getenv('DATABASE_URL');
 
-            if (!$host || !$db || !$user || !$pass) {
-                throw new Exception('Variables de entorno MySQL incompletas');
-            }
-
-            $pdo = new PDO(
-                "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
-                $user,
-                $pass,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]
-            );
-        } catch (Throwable $e) {
-            error_log('ERROR DB: ' . $e->getMessage());
-            return null;
+        if (!$databaseUrl) {
+            throw new Exception('DATABASE_URL no existe en Render');
         }
-    }
 
-    return $pdo;
+        // mysql://user:pass@host:port/dbname
+        $parts = parse_url($databaseUrl);
+
+        if ($parts === false) {
+            throw new Exception('DATABASE_URL inválida');
+        }
+
+        $host = $parts['host'];
+        $port = $parts['port'] ?? 3306;
+        $user = $parts['user'];
+        $pass = $parts['pass'] ?? '';
+        $db   = ltrim($parts['path'], '/');
+
+        $pdo = new PDO(
+            "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
+            $user,
+            $pass,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]
+        );
+
+        return $pdo;
+
+    } catch (Throwable $e) {
+        error_log('❌ DB ERROR: ' . $e->getMessage());
+        return null;
+    }
 }
