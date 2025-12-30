@@ -1,39 +1,21 @@
 <?php
-function getDatabase() {
-    static $pdo = null;
-    if ($pdo) return $pdo;
 
-    $host = getenv('DB_HOST');
-    $port = getenv('DB_PORT') ?: 3306;
-    $db   = getenv('DB_DATABASE');
-    $user = getenv('DB_USERNAME');
-    $pass = getenv('DB_PASSWORD');
+$host = getenv('DB_HOST');
+$db   = getenv('DB_NAME');
+$user = getenv('DB_USER');
+$pass = getenv('DB_PASS');
+$port = getenv('DB_PORT') ?: 3306;
 
-    if (!$host || !$db || !$user || !$pass) {
-        echo "❌ ENV MISSING\n";
-        var_dump([
-            'DB_HOST' => $host,
-            'DB_PORT' => $port,
-            'DB_DATABASE' => $db,
-            'DB_USERNAME' => $user,
-            'DB_PASSWORD' => $pass ? 'SET' : 'MISSING'
-        ]);
-        return null;
-    }
-
-    try {
-        $pdo = new PDO(
-            "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
-            $user,
-            $pass,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]
-        );
-        return $pdo;
-    } catch (Throwable $e) {
-        echo "❌ PDO ERROR: ".$e->getMessage();
-        return null;
-    }
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+} catch (PDOException $e) {
+    die("❌ Error DB: " . $e->getMessage());
 }
