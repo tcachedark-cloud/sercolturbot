@@ -1,5 +1,21 @@
-
 <?php
+/**
+ * Cargar .env si existe (desarrollo local)
+ */
+$envFile = __DIR__ . '/../../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') === false) continue;
+        
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value, '\'" ');
+        putenv("$key=$value");
+    }
+}
+
 /**
  * Conector robusto para Render ⇄ Railway
  * - Lee primero DB_* (tu esquema actual)
@@ -22,7 +38,7 @@ function dbConfigFromEnv(): array {
         $pass = $pass ?: getenv('DB_PASSWORD');
     }
 
-    // Intento 3: parsear DATABASE_URL (si existe)
+    // Intento 3: parsear DATABASE_URL
     $url = getenv('DATABASE_URL') ?: getenv('RAILWAY_DATABASE_URL');
     if ((!$host || !$port || !$db || !$user || !$pass) && $url) {
         $parts = parse_url($url);
