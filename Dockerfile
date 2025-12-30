@@ -7,8 +7,8 @@ RUN docker-php-ext-install pdo pdo_mysql mysqli
 COPY . /app
 WORKDIR /app
 
-# Exponer puerto
-EXPOSE 8080
+# Railway usa variable PORT
+ENV PORT=8080
 
-# Usar servidor PHP integrado (más simple y confiable)
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app"]
+# Usar el puerto de Railway
+CMD php -S 0.0.0.0:${PORT} -t /app
