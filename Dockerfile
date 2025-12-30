@@ -6,8 +6,8 @@ RUN a2enmod rewrite
 # Instalar extensiones PHP
 RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# Cambiar DocumentRoot SOLO en 000-default.conf
-RUN sed -ri 's!DocumentRoot /var/www/html!DocumentRoot /var/www/html/public!g' \
+# Cambiar DocumentRoot con la configuración adecuada
+RUN sed -i 's|^DocumentRoot /var/www/html$|DocumentRoot /var/www/html/public|' \
     /etc/apache2/sites-available/000-default.conf
 
 # Copiar proyecto
