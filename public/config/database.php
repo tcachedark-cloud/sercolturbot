@@ -29,7 +29,6 @@ function dbConfigFromEnv(): array {
         if ($parts !== false) {
             $host = $host ?: ($parts['host'] ?? null);
             $port = $port ?: ($parts['port'] ?? 3306);
-            // path viene con '/dbname'
             if (!$db && isset($parts['path'])) {
                 $db = ltrim($parts['path'], '/');
             }
@@ -38,7 +37,7 @@ function dbConfigFromEnv(): array {
         }
     }
 
-    // Defaults seguros (para mostrar estado, no para producción)
+    // Defaults de seguridad
     $host = $host ?: 'localhost';
     $port = $port ?: 3306;
 
@@ -47,9 +46,14 @@ function dbConfigFromEnv(): array {
 
 $config = dbConfigFromEnv();
 
+// Diagnóstico mínimo en logs (temporal)
+error_log('DB_HOST=' . ($config['host'] ?? '(vacío)'));
+error_log('DB_NAME=' . ($config['db']   ?? '(vacío)'));
+error_log('DB_USER=' . ($config['user'] ?? '(vacío)'));
+error_log('DB_PORT=' . ($config['port'] ?? '(vacío)'));
+
 try {
     if (!$config['host'] || !$config['db'] || !$config['user']) {
-        // Mensaje claro si faltan variables (evitar exponer el password)
         throw new RuntimeException('Variables MySQL no configuradas (host/db/user faltan).');
     }
 
@@ -65,12 +69,7 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
     ]);
-
-    // Opcional: prueba rápida
-    // $pdo->query('SELECT 1');
-
 } catch (Throwable $e) {
     http_response_code(500);
-    // No exponer credenciales
     die('❌ Error de conexión MySQL: ' . $e->getMessage());
 }
