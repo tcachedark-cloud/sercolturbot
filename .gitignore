@@ -1,3 +1,23 @@
+# Archivos de depuración
+public/debug-env.php
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Dependencias
+vendor/
+node_modules/
+
+# Caché
+*.cache
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
 # Logs
 logs/
 *.log

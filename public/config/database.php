@@ -1,16 +1,23 @@
-
 <?php
 
-// Prioriza variables estándar; si no existen, usa las antiguas
-$host = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: getenv('MYSQL_PORT') ?: 3306;
+// Soporta múltiples formatos de variables de entorno
+// Railway usa DATABASE_URL, otras plataformas usan variables individuales
+$host = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: getenv('RAILWAY_DB_HOST') ?: 'localhost';
+$port = getenv('DB_PORT') ?: getenv('MYSQL_PORT') ?: getenv('RAILWAY_DB_PORT') ?: 3306;
+$db   = getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: getenv('RAILWAY_DB_NAME') ?: 'railway';
+$user = getenv('DB_USERNAME') ?: getenv('DB_USER') ?: getenv('RAILWAY_DB_USER') ?: 'root';
+$pass = getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: getenv('RAILWAY_DB_PASSWORD') ?: '';
 
-// Nombre de base de datos: DB_DATABASE (convención) o DB_NAME (antiguo)
-$db   = getenv('DB_DATABASE') ?: getenv('DB_NAME') ?: 'railway';
-
-// Usuario y contraseña: DB_USERNAME/DB_PASSWORD (convención) o DB_USER/DB_PASS (antiguo)
-$user = getenv('DB_USERNAME') ?: getenv('DB_USER') ?: 'root';
-$pass = getenv('DB_PASSWORD') ?: getenv('DB_PASS') ?: '';
+// Si DATABASE_URL está disponible (formato Railway), parsear URL
+$databaseUrl = getenv('DATABASE_URL');
+if ($databaseUrl) {
+    $parsed = parse_url($databaseUrl);
+    $host = $parsed['host'] ?? $host;
+    $port = $parsed['port'] ?? $port;
+    $user = $parsed['user'] ?? $user;
+    $pass = $parsed['pass'] ?? $pass;
+    $db = ltrim($parsed['path'] ?? '', '/') ?: $db;
+}
 
 try {
     $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $db);
@@ -25,7 +32,6 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    // Mensaje claro para diagnóstico (no exponer credenciales)
     http_response_code(500);
     die("❌ Error DB: " . $e->getMessage());
 }
