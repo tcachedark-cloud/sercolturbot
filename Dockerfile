@@ -1,22 +1,13 @@
-FROM php:8.2-apache
+FROM node:18-alpine
 
-# Habilitar mod_rewrite
-RUN a2enmod rewrite
+WORKDIR /app
 
-# Instalar extensiones necesarias
-RUN docker-php-ext-install pdo pdo_mysql
+COPY package*.json ./
 
-# Cambiar DocumentRoot a /public
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN npm install
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/*.conf \
-    /etc/apache2/apache2.conf \
-    /etc/apache2/conf-available/*.conf
+COPY . .
 
-# Copiar proyecto
-COPY . /var/www/html/
+EXPOSE 3000
 
-# Permisos
-RUN chown -R www-data:www-data /var/www/html \
- && chmod -R 755 /var/www/html
+CMD ["npm", "start"]
